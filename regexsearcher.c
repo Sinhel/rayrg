@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "JetBrainsMono-Medium.h"
 
 #ifdef _WIN32
     #define POPEN _popen
@@ -25,13 +26,13 @@
 
 typedef struct {
     bool PrintPaths;
-    bool FilterTypes;
     bool AppendPaths;
     bool OmitMatches;
+    bool Multiline;
     char InputPathText[1024];
-    char FileTypeText[128];
-    char *OutputPathText;
-    char *RegularExpressionText;
+    char FileText[128];
+    char OutputPathText[1024];
+    char RegularExpressionText[2048];
 } Options;
 
 //----------------------------------------------------------------------------------
@@ -40,18 +41,34 @@ typedef struct {
 
 
 void CompileCmd(char *cmd, Options options) {
-    char buffer[1024];
+    char buffer[4096];
 
     strcat(cmd, "rg ");
-    printf("filetype to filer: %s\n", options.FileTypeText);
     if (options.PrintPaths)  {strcat(cmd, "--files ");}
-    if (options.FilterTypes) sprintf(buffer, "%s ", options.FileTypeText); strcat(cmd, buffer); 
-    if (options.AppendPaths) {strcat(cmd, "--with-filename ");}
+    if (options.Multiline)   {strcat(cmd, "-U ");}
+    
+    if (strcmp(options.FileText, "")){
+        sprintf(buffer, "-g '%s' ", options.FileText); 
+        strcat(cmd, buffer); 
+    }
+
+    if (!options.AppendPaths) {strcat(cmd, "-I ");}
     if (options.OmitMatches) {strcat(cmd, "--only-matching ");}
-    strcat(cmd, options.InputPathText);
+
+    if (strcmp(options.RegularExpressionText, "")){
+        sprintf(buffer, "'%s' ", options.RegularExpressionText); 
+        strcat(cmd, buffer);
+    }
+
+    if (strcmp(options.InputPathText, "")){
+        sprintf(buffer, "%s ", options.InputPathText); 
+        strcat(cmd, options.InputPathText);
+    }
 
     //make sure stderr is included in stdout
     strcat(cmd, " 2>&1");
+
+    //TODO remove
     RAYGUI_LOG("cmd = %s\n", cmd);
 }
 
@@ -84,7 +101,6 @@ int ReadProcess(FILE *pipe, char *line, char **buffer, size_t *total_size) {
         *total_size += line_len;
         return 0;
     }
-    //RAYGUI_LOG("ReadProcess output: %s", *buffer); TODO
     return 1;
 }
 
@@ -117,7 +133,8 @@ int main()
 
 
     InitWindow(screenWidth, screenHeight, "Regex searcher");
-    Font JetBrainsMono = LoadFont("./JetBrainsMono-Medium.ttf");
+
+    Font JetBrainsMono = LoadFontFromMemory(".ttf", JetBrainsMono_Medium_ttf, JetBrainsMono_Medium_ttf_len, 32, NULL, 0);
     GuiSetFont(JetBrainsMono);
     GuiSetStyle(DEFAULT, TEXT_SIZE, 16);
 
@@ -125,12 +142,9 @@ int main()
     //----------------------------------------------------------------------------------
     bool WindowActive = true;
     bool InputPathEditMode = false;
-    bool FileTypeEditMode = false;
+    bool FileEditMode = false;
     bool RegularExpressionEditMode = false;
-    char RegularExpressionText[128] = "RegularExpression";
     bool OutputPathEditMode = false;
-    char OutputPathText[128] = "OutputPath";
-    bool OutputEditMode = false;
     bool ButtonSearch = false;
 
     char *OutputText = malloc(1024*8);
@@ -140,7 +154,6 @@ int main()
 
     Rectangle ScrollOutputScrollView = {0, 0, 0, 0};
     Vector2 ScrollOutputScrollOffset =  {0, 0};
-    Vector2 ScrollOutputBoundsOffset =  {0, 0};
 
     FILE *pipe = {0};
     int reading = 0;
@@ -148,8 +161,6 @@ int main()
     char line[LINESIZE] = {0};
     char cmd[LINESIZE] = {0};
     Options options = {0};
-    strcpy(options.InputPathText, "InputPath");
-    strcpy(options.FileTypeText, "Filetype");
     //----------------------------------------------------------------------------------
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
@@ -162,18 +173,21 @@ int main()
         
         // Read the output into the line buffer
             if (reading) {
+                //Make 1000 reads per frame, to not slow down reading to much (possible to do 60.000 lines per second with this loop)
                 for (int i = 0; i < 1000; i++) {
                     if (!ReadProcess(pipe, line, &OutputText, &total_size)) reading = 1;
                     else { 
-                        reading = 0; break;
+                        reading = 0;
 
                         int status = PCLOSE(pipe);
                         if (status == -1) {
                             perror("pclose failed");
                             return 1;
                         }
+                        //cleanup and leave loop
+                        if (strcmp(options.OutputPathText, "")) {WriteToFile(OutputText, options.OutputPathText);}
                         strcpy(cmd, "");
-                        printf("Process closed\n");
+                        break;
                     }
                 }
             }
@@ -190,18 +204,38 @@ int main()
                 //WindowActive = !GuiWindowBox((Rectangle){   0,   0, 1200, 800 }, "Regular expressions");
                 WindowActive = !GuiGroupBox((Rectangle){   0,    0, 1200, 800 }, NULL);
                 if (GuiTextBox((Rectangle)             {  24,  16,   496,  24 }, options.InputPathText, 128, InputPathEditMode)) InputPathEditMode = !InputPathEditMode;
-                if (GuiTextBox((Rectangle)             {  24,  56,   496,  24 }, options.FileTypeText, 128, FileTypeEditMode)) FileTypeEditMode = !FileTypeEditMode;
-                if (GuiTextBox((Rectangle)             {  24,  96,   496,  24 }, OutputPathText, 128, OutputPathEditMode)) OutputPathEditMode = !OutputPathEditMode;
-                if (GuiTextBox((Rectangle)             {  24, 136,   496,  24 }, RegularExpressionText, 128, RegularExpressionEditMode)) RegularExpressionEditMode = !RegularExpressionEditMode;
+                if (GuiTextBox((Rectangle)             {  24,  56,   496,  24 }, options.FileText, 128, FileEditMode)) FileEditMode = !FileEditMode;
+                if (GuiTextBox((Rectangle)             {  24,  96,   496,  24 }, options.OutputPathText, 128, OutputPathEditMode)) OutputPathEditMode = !OutputPathEditMode;
+                if (GuiTextBox((Rectangle)             {  24, 136,   496,  24 }, options.RegularExpressionText, 128, RegularExpressionEditMode)) RegularExpressionEditMode = !RegularExpressionEditMode;
                 GuiGroupBox((Rectangle)                { 544,   8,   304, 200 }, "Options");
                 GuiCheckBox((Rectangle)                { 568,  16,    24,  24 }, "Print paths", &options.PrintPaths);
-                GuiCheckBox((Rectangle)                { 568,  56,    24,  24 }, "Filter on filetype", &options.FilterTypes);
-                GuiCheckBox((Rectangle)                { 568,  96,    24,  24 }, "AppendPaths", &options.AppendPaths);
-                GuiCheckBox((Rectangle)                { 568, 136,    24,  24 }, "OmitMatches", &options.OmitMatches);
+                GuiCheckBox((Rectangle)                { 568,  56,    24,  24 }, "AppendPaths", &options.AppendPaths);
+                GuiCheckBox((Rectangle)                { 568,  96,    24,  24 }, "OmitMatches", &options.OmitMatches);
+                GuiCheckBox((Rectangle)                { 568, 136,    24,  24 }, "Multiline",   &options.Multiline);
                 ButtonSearch = GuiButton((Rectangle)   {  24, 176,   496,  24 }, "Search");
                 TextSize = MeasureTextEx(JetBrainsMono, OutputText, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING));
                 GuiScrollPanel((Rectangle)             {  24, 216,   864, 350 },NULL, (Rectangle){ 80, 320, TextSize.x, TextSize.y }, &ScrollOutputScrollOffset, &ScrollOutputScrollView);
 
+                //Draw default values in textboxes
+                {
+                    if (!strcmp(options.InputPathText, "")) {
+                        DrawTextEx(JetBrainsMono, "InputPath", (Vector2){ 28, 19 }, 
+                            GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+                    }
+                    if (!strcmp(options.FileText, "")) {
+                        DrawTextEx(JetBrainsMono, "File", (Vector2){ 28, 59 }, 
+                            GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+                    }
+                    if (!strcmp(options.OutputPathText, "")) {
+                        DrawTextEx(JetBrainsMono, "OutputPath", (Vector2){ 28, 99 }, 
+                            GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+                    }
+                    if (!strcmp(options.RegularExpressionText, "")) {
+                        DrawTextEx(JetBrainsMono, "RegularExpression", (Vector2){ 28, 139 }, 
+                            GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL)));
+                    }
+                }
+                //Draw content in GuiScrollPanel
                 BeginScissorMode(24, 216, 864, 350);
                 {
                    DrawTextEx(JetBrainsMono, OutputText, (Vector2){ 24 + ScrollOutputScrollOffset.x, 216 + ScrollOutputScrollOffset.y },
@@ -215,9 +249,9 @@ int main()
             }
         EndDrawing();
         //----------------------------------------------------------------------------------
-        if (ButtonSearch) {
+        if (ButtonSearch || IsKeyPressed(KEY_ENTER)) {
             CompileCmd(cmd, options); 
-            if (OpenProcess(&pipe, cmd)) return 1; reading = 1;
+            if (!OpenProcess(&pipe, cmd)) { reading = 1; }
         }
     }
 
