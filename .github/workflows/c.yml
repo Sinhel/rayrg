@@ -1,0 +1,74 @@
+name: C CI
+
+on:
+  push:
+    branches: [ "master" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: windows-latest
+            target: windows_github
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        if: matrix.target == 'linux'
+        run: |
+          sudo add-apt-repository ppa:texus/raylib
+          sudo apt-get update
+          sudo apt-get install -y build-essential libraylib6-dev libpcre2-dev
+
+      - name: Install dependencies (Windows)
+        if: matrix.target == 'windows_github'
+        shell: bash
+        run: |
+          choco install mingw -y
+          choco install zstandard -y
+
+          mkdir -p deps/include deps/lib
+
+          curl -L -o raylib.pkg.tar.zst https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-raylib-5.5-2-any.pkg.tar.zst
+          zstd -d raylib.pkg.tar.zst
+          tar -xf raylib.pkg.tar.zst
+
+          curl -L -o pcre2.pkg.tar.zst https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-pcre2-10.47-1-any.pkg.tar.zst
+          zstd -d pcre2.pkg.tar.zst
+          tar -xf pcre2.pkg.tar
+
+          cp mingw64/include/*.h deps/include/
+          cp mingw64/lib/*.a deps/lib/
+
+      - name: Build
+        run: make ${{ matrix.target }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output-${{ matrix.target }}
+          path: |
+            rayrg
+            rayrg.exe
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ matrix.target == 'linux' && 'rayrg' || '' }}
+            ${{ matrix.target == 'windows_github' && 'rayrg.exe' || '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
