@@ -202,7 +202,12 @@ int main() {
 
     InitWindow(screenWidth, screenHeight, "Regex searcher");
 
-    Font JetBrainsMono = LoadFontFromMemory(".ttf", JetBrainsMono_Medium_ttf, JetBrainsMono_Medium_ttf_len, 32, NULL, 0);
+    //Needed to load æøåÆØÅ
+    const char *CharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~øæåØÆÅ";
+    int CharCount = 0;
+    int *CharCodepoints = LoadCodepoints(CharSet, &CharCount);
+
+    Font JetBrainsMono = LoadFontFromMemory(".ttf", JetBrainsMono_Medium_ttf, JetBrainsMono_Medium_ttf_len, 32, CharCodepoints, CharCount);
     GuiSetFont(JetBrainsMono);
     GuiSetStyle(DEFAULT, TEXT_SIZE, 16);
 
