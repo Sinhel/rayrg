@@ -89,8 +89,8 @@ int ParseExpression(const char *expression, CSV *csv) {
         snprintf(ReplaceBuffer, sizeof(ReplaceBuffer), "$%d", i);
         strcat(csv->replace_str, ReplaceBuffer);
         if (i < capture_count) {
-            strcat(csv->CSV_header, ", ");
-            strcat(csv->replace_str, ", ");
+            strcat(csv->CSV_header, ",");
+            strcat(csv->replace_str, ",");
         }
     }
     return 0;
@@ -137,11 +137,11 @@ int CompileCmd(char *cmd, Options options, char **OutputText, size_t *total_size
     }
 
     if (options.Format) {
-        // TODO
         if (ParseExpression(options.RegularExpressionText, &csv))
             return 1;
-        WriteBuffer(csv.CSV_header, OutputText, strlen(csv.CSV_header), total_size);
-        WriteBuffer("\n", OutputText, strlen("\n"), total_size);
+        if (options.AppendPaths) WriteBuffer("Filename,", OutputText, false);
+        WriteBuffer(csv.CSV_header, OutputText, false);
+        WriteBuffer("\n", OutputText, false);
         sprintf(cmdbuffer, "--replace '%s' ", csv.replace_str);
         strcat(cmd, cmdbuffer);
     }
@@ -331,6 +331,9 @@ int main() {
         }
         EndDrawing();
         //----------------------------------------------------------------------------------
+        //Tie formatting option to always omit full matches
+        if (options.Format) options.OmitMatches = true;
+
         if (ButtonSearch || IsKeyPressed(KEY_ENTER)) {
             // TODO clear output text on new search.
             // Since we allocate memory to it on new lines, should we also free it to not leak
