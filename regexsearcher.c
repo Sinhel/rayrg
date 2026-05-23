@@ -122,7 +122,7 @@ int WriteBuffer(char *line, char **buffer, bool reset) {
     return 0;
 }
 
-int CompileCmd(char *cmd, Options options, char **OutputText, size_t *total_size) {
+int CompileCmd(char *cmd, Options options, char **OutputText) {
     char cmdbuffer[4096];
     CSV csv = {0};
 
@@ -140,7 +140,7 @@ int CompileCmd(char *cmd, Options options, char **OutputText, size_t *total_size
     }
 
     if (!options.AppendPaths) {
-        strcat(cmd, "-I ");
+        strcat(cmd, "--no-filename ");
     }
     if (options.OmitMatches) {
         strcat(cmd, "--only-matching ");
@@ -270,7 +270,6 @@ int main() {
                     if (strcmp(options.OutputPathText, "")) {
                         WriteToFile(OutputText, options.OutputPathText);
                     }
-                    strcpy(cmd, "");
                     break;
                 }
                 if (WriteBuffer(line, &OutputText, false)) {
