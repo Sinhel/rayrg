@@ -2,7 +2,7 @@
  *
  *   Regex searcher v1.0.0 - Calls ripgrep from path.
  *
- **********************************************************************************************/
+ *******************************************************************************************/
 
 #ifdef _WIN32
 #define POPEN _popen
@@ -135,7 +135,7 @@ int CompileCmd(char *cmd, Options options, char **OutputText) {
     }
 
     if (strcmp(options.FileText, "")) {
-        sprintf(cmdbuffer, "-g '%s' ", options.FileText);
+        sprintf(cmdbuffer, "-g \"%s\" ", options.FileText);
         strcat(cmd, cmdbuffer);
     }
 
@@ -152,12 +152,12 @@ int CompileCmd(char *cmd, Options options, char **OutputText) {
         if (options.AppendPaths) WriteBuffer("Filename,", OutputText, false);
         WriteBuffer(csv.CSV_header, OutputText, false);
         WriteBuffer("\n", OutputText, false);
-        sprintf(cmdbuffer, "--replace '%s' ", csv.replace_str);
+        sprintf(cmdbuffer, "--replace \"%s\" ", csv.replace_str);
         strcat(cmd, cmdbuffer);
     }
 
     if (strcmp(options.RegularExpressionText, "")) {
-        sprintf(cmdbuffer, "'%s' ", options.RegularExpressionText);
+        sprintf(cmdbuffer, "\"%s\" ", options.RegularExpressionText);
         strcat(cmd, cmdbuffer);
     }
 
