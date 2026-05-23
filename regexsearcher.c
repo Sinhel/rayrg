@@ -66,7 +66,6 @@ int ParseExpression(const char *expression, CSV *csv) {
     pcre2_pattern_info(re, PCRE2_INFO_NAMETABLE, &name_table);
     pcre2_pattern_info(re, PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size);
 
-
     for (int i = 1; i <= capture_count; i++) {
         const char *found_name = NULL;
 
@@ -94,9 +93,6 @@ int ParseExpression(const char *expression, CSV *csv) {
             strcat(csv->replace_str, ", ");
         }
     }
-    //TODO delete logging
-    RAYGUI_LOG("header: %s\n", csv->CSV_header);
-    RAYGUI_LOG("Replace: %s\n", csv->replace_str);
     return 0;
 }
 
@@ -116,7 +112,7 @@ int WriteBuffer(char *line, char **buffer, size_t line_len, size_t *total_size) 
     return 0;
 }
 
-void CompileCmd(char *cmd, Options options, char **OutputText, size_t *total_size) {
+int CompileCmd(char *cmd, Options options, char **OutputText, size_t *total_size) {
     char cmdbuffer[4096];
     CSV csv = {0};
 
@@ -142,8 +138,12 @@ void CompileCmd(char *cmd, Options options, char **OutputText, size_t *total_siz
 
     if (options.Format) {
         // TODO
-        ParseExpression(options.RegularExpressionText, &csv);
-        WriteBuffer(csv.CSV_header, OutputText, sizeof(csv.CSV_header), total_size);
+        if (ParseExpression(options.RegularExpressionText, &csv))
+            return 1;
+        WriteBuffer(csv.CSV_header, OutputText, strlen(csv.CSV_header), total_size);
+        WriteBuffer("\n", OutputText, strlen("\n"), total_size);
+        sprintf(cmdbuffer, "--replace '%s' ", csv.replace_str);
+        strcat(cmd, cmdbuffer);
     }
 
     if (strcmp(options.RegularExpressionText, "")) {
@@ -161,6 +161,7 @@ void CompileCmd(char *cmd, Options options, char **OutputText, size_t *total_siz
 
     // TODO remove
     RAYGUI_LOG("cmd = %s\n", cmd);
+    return 0;
 }
 
 int OpenProcess(FILE **pipe, char *cmd) {
@@ -202,7 +203,7 @@ int main() {
 
     InitWindow(screenWidth, screenHeight, "Regex searcher");
 
-    //Needed to load æøåÆØÅ
+    // Needed to load æøåÆØÅ
     const char *CharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~øæåØÆÅ";
     int CharCount = 0;
     int *CharCodepoints = LoadCodepoints(CharSet, &CharCount);
@@ -331,6 +332,10 @@ int main() {
         EndDrawing();
         //----------------------------------------------------------------------------------
         if (ButtonSearch || IsKeyPressed(KEY_ENTER)) {
+            // TODO clear output text on new search.
+            // Since we allocate memory to it on new lines, should we also free it to not leak
+            // memory?
+            // strcpy(OutputText, "");
             CompileCmd(cmd, options, &OutputText, &total_size);
             if (!OpenProcess(&pipe, cmd)) {
                 reading = 1;
