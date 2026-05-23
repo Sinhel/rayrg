@@ -14,8 +14,8 @@ LIBS_WIN = -lopengl32 -lgdi32 -lwinmm -luser32 -lshell32 \
 
 # Files
 SRC = regexsearcher.c
-TARGET_LINUX = a.out
-TARGET_WIN = a.exe
+TARGET_LINUX = rayrg.out
+TARGET_WIN = rayrg.exe
 
 .PHONY: all linux windows clean
 

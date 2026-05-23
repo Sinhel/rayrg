@@ -212,6 +212,7 @@ int main() {
     int screenHeight = 568;
 
     InitWindow(screenWidth, screenHeight, "Regex searcher");
+    SetExitKey(KEY_NULL); // Disables the ESC key from triggering WindowShouldClose()
 
     // Needed to load æøåÆØÅ
     const char *CharSet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~øæåØÆÅ";
@@ -255,7 +256,7 @@ int main() {
 
         // Read the output into the line buffer
         if (reading) {
-            // Make 1000 reads per frame, to not slow down reading to much
+            // Do 1000 reads per frame, to not slow down reading too much
             // (possible to do 60.000 lines per second with this loop)
             for (int i = 0; i < 1000; i++) {
                 if (fgets(line, LINESIZE, pipe) != NULL) {
@@ -285,8 +286,6 @@ int main() {
         // raygui: controls drawing
         //----------------------------------------------------------------------------------
         if (WindowActive) {
-            // WindowActive = !GuiWindowBox((Rectangle){   0,   0, 1200, 800 },
-            // "Regular expressions");
             WindowActive = !GuiGroupBox((Rectangle){0, 0, 1200, 800}, NULL);
             if (GuiTextBox((Rectangle){24, 16, 496, 24}, options.InputPathText, 128, InputPathEditMode))
                 InputPathEditMode = !InputPathEditMode;
