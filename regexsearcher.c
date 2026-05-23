@@ -96,19 +96,29 @@ int ParseExpression(const char *expression, CSV *csv) {
     return 0;
 }
 
-int WriteBuffer(char *line, char **buffer, size_t line_len, size_t *total_size) {
-    // Reallocate memory for new line
-    char *temp = realloc(*buffer, *total_size + line_len + 1);
+int WriteBuffer(char *line, char **buffer, bool reset) {
+    static size_t total_size = 0;
+
+    if (reset) {
+        if (*buffer != NULL) memset(*buffer, 0, total_size);
+        total_size = 0;
+        return 0;
+    }
+
+    if (line == NULL) return 0;
+
+    size_t line_len = strlen(line);
+    // Reallocate memory based on size of string
+    char *temp = realloc(*buffer, total_size + line_len + 1);
     if (temp == NULL) {
         perror("pclose failed");
-        free(*buffer);
         return 1;
     }
     *buffer = temp;
 
     // Append the line
-    strcpy(*buffer + *total_size, line);
-    *total_size += line_len;
+    memcpy(*buffer + total_size, line, line_len);
+    total_size += line_len;
     return 0;
 }
 
@@ -231,7 +241,6 @@ int main() {
 
     FILE *pipe = {0};
     int reading = 0;
-    size_t total_size = 0;
     char line[LINESIZE] = {0};
     char cmd[LINESIZE] = {0};
     Options options = {0};
@@ -264,7 +273,7 @@ int main() {
                     strcpy(cmd, "");
                     break;
                 }
-                if (WriteBuffer(line, &OutputText, strlen(line), &total_size)) {
+                if (WriteBuffer(line, &OutputText, false)) {
                 }
             }
         }
@@ -335,11 +344,9 @@ int main() {
         if (options.Format) options.OmitMatches = true;
 
         if (ButtonSearch || IsKeyPressed(KEY_ENTER)) {
-            // TODO clear output text on new search.
-            // Since we allocate memory to it on new lines, should we also free it to not leak
-            // memory?
-            // strcpy(OutputText, "");
-            CompileCmd(cmd, options, &OutputText, &total_size);
+            WriteBuffer(NULL, &OutputText, true);
+            strcpy(cmd, "");
+            CompileCmd(cmd, options, &OutputText);
             if (!OpenProcess(&pipe, cmd)) {
                 reading = 1;
             }
