@@ -54,8 +54,7 @@ int ParseExpression(const char *expression, CSV *csv) {
     int errornumber;
     PCRE2_SIZE erroroffset;
     pcre2_code *re = pcre2_compile((PCRE2_SPTR)expression, PCRE2_ZERO_TERMINATED, 0, &errornumber, &erroroffset, NULL);
-    if (!re)
-        return 1;
+    if (!re) return 1;
 
     int capture_count;
     int name_count;
@@ -79,10 +78,8 @@ int ParseExpression(const char *expression, CSV *csv) {
         }
 
         char HeaderBuffer[128] = {0};
-        if (found_name)
-            snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%s", found_name);
-        else
-            snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%d", i);
+        if (found_name) snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%s", found_name);
+        else snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%d", i);
         strcat(csv->CSV_header, HeaderBuffer);
 
         char ReplaceBuffer[128];
@@ -147,8 +144,7 @@ int CompileCmd(char *cmd, Options options, char **OutputText) {
     }
 
     if (options.Format) {
-        if (ParseExpression(options.RegularExpressionText, &csv))
-            return 1;
+        if (ParseExpression(options.RegularExpressionText, &csv)) return 1;
         if (options.AppendPaths) WriteBuffer("Filename,", OutputText, false);
         WriteBuffer(csv.CSV_header, OutputText, false);
         WriteBuffer("\n", OutputText, false);
@@ -289,8 +285,7 @@ int main() {
             WindowActive = !GuiGroupBox((Rectangle){0, 0, 1200, 800}, NULL);
             if (GuiTextBox((Rectangle){24, 16, 496, 24}, options.InputPathText, 128, InputPathEditMode))
                 InputPathEditMode = !InputPathEditMode;
-            if (GuiTextBox((Rectangle){24, 56, 496, 24}, options.FileText, 128, FileEditMode))
-                FileEditMode = !FileEditMode;
+            if (GuiTextBox((Rectangle){24, 56, 496, 24}, options.FileText, 128, FileEditMode)) FileEditMode = !FileEditMode;
             if (GuiTextBox((Rectangle){24, 96, 496, 24}, options.OutputPathText, 128, OutputPathEditMode))
                 OutputPathEditMode = !OutputPathEditMode;
             if (GuiTextBox((Rectangle){24, 136, 496, 24}, options.RegularExpressionText, 128, RegularExpressionEditMode))
@@ -338,7 +333,7 @@ int main() {
         }
         EndDrawing();
         //----------------------------------------------------------------------------------
-        //Tie formatting option to always omit full matches
+        // Tie formatting option to always omit full matches
         if (options.Format) options.OmitMatches = true;
 
         if (ButtonSearch || IsKeyPressed(KEY_ENTER)) {
