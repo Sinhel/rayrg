@@ -148,7 +148,11 @@ int CompileCmd(char *cmd, Options options, char **OutputText) {
         if (options.AppendPaths) WriteBuffer("Filename,", OutputText, false);
         WriteBuffer(csv.CSV_header, OutputText, false);
         WriteBuffer("\n", OutputText, false);
+#ifdef _WIN32
         sprintf(cmdbuffer, "--replace \"%s\" ", csv.replace_str);
+#else
+        sprintf(cmdbuffer, "--replace \'%s\' ", csv.replace_str);
+#endif
         strcat(cmd, cmdbuffer);
     }
 
