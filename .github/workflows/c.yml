@@ -42,13 +42,27 @@ jobs:
           sudo cp *.h /usr/x86_64-w64-mingw32/include/
           sudo cp libraylib.a /usr/x86_64-w64-mingw32/lib/
 
-      - name: Download Windows pcre2 (static) 
+      - name: Build and install pcre2 from source (static) 
         run: | 
-          curl -L -o pcre2.pkg.tar.zst https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-pcre2-10.47-1-any.pkg.tar.zst
-          zstd -d pcre2.pkg.tar.zst 
-          tar -xf pcre2.pkg.tar 
-          sudo cp mingw64/include/pcre2.h /usr/x86_64-w64-mingw32/include/
-          sudo cp mingw64/lib/libpcre2-8.a /usr/x86_64-w64-mingw32/lib/
+          git clone https://github.com/PCRE2Project/pcre2.git
+          cd pcre2
+          git checkout pcre2-10.47
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+            -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+            -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
+            -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_STATIC_LIBS=ON \
+            -DPCRE2_STATIC_PIC=ON \
+            -DPCRE2_BUILD_PCRE2GREP=OFF \
+            -DPCRE2_BUILD_TESTS=OFF
+          cmake --build . --config Release
+          sudo cmake --install .
 
       - name: Build Linux
         run: make linux
