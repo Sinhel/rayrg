@@ -12,7 +12,8 @@ LIBS_LINUX = -lm -lpthread -ldl -lrt -lGL -lX11
 LIBS_WIN = -lopengl32 -lgdi32 -lwinmm -luser32 -lshell32
 
 # Files
-SRC = regexsearcher.c
+SRC = gui.c regexsearcher.c
+HDR = regexsearcher.h
 TARGET_LINUX = rayrg
 TARGET_WIN = rayrg.exe
 
@@ -22,14 +23,14 @@ all: linux windows
 
 linux: $(TARGET_LINUX)
 
-$(TARGET_LINUX): $(SRC)
+$(TARGET_LINUX): $(SRC) $(HDR)
 	$(CC_LINUX) $(SRC) -o $(TARGET_LINUX) $(CFLAGS_LINUX) \
 		$(LIBS_COMMON) $(LIBS_LINUX)
 
 windows: $(TARGET_WIN)
 
-$(TARGET_WIN): $(SRC)
-	$(CC_WIN) $(SRC) -o $(TARGET_WIN) $(CFLAGS_WIN)  \
+$(TARGET_WIN): $(SRC) $(HDR)
+	$(CC_WIN) -DPCRE2_STATIC $(SRC) -o $(TARGET_WIN) $(CFLAGS_WIN)  \
 		$(LIBS_COMMON) $(LIBS_WIN)
 
 clean:
