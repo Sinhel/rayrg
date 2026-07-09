@@ -11,9 +11,6 @@
 
 #define LINESIZE 2048
 
-//------------------------------------------------------------------------------------
-// Program main entry point
-//------------------------------------------------------------------------------------
 int main() {
     // Initialization
     //---------------------------------------------------------------------------------------
@@ -32,8 +29,6 @@ int main() {
     GuiSetFont(JetBrainsMono);
     GuiSetStyle(DEFAULT, TEXT_SIZE, 16);
 
-    // Regex searcher: controls initialization
-    //----------------------------------------------------------------------------------
     bool WindowActive = true;
     bool InputPathEditMode = false;
     bool FileEditMode = false;
@@ -58,12 +53,8 @@ int main() {
     SetTargetFPS(60);
 
     // Main loop
-    while (!WindowShouldClose()) // Detect window close button or ESC key
+    while (!WindowShouldClose())
     {
-        // Update
-        //----------------------------------------------------------------------------------
-
-        // Read the output into the line buffer
         if (reading) {
             // Do 1000 reads per frame, to not slow down reading too much
             // (possible to do 60.000 lines per second with this loop)
@@ -161,11 +152,7 @@ int main() {
             }
         }
     }
-
-    // De-Initialization
-    //---------------------------------------------------------------------------------------
     CloseWindow();
-
     return 0;
 }
 
