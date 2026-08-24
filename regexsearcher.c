@@ -7,7 +7,7 @@
 
 #define LINESIZE 2048
 
-int ParseExpression(const char *expression, CSV *csv) {
+int ParseExpression(const char *expression, CSV *csv, char *delimiter) {
     int errornumber;
     PCRE2_SIZE erroroffset;
     pcre2_code *re = pcre2_compile((PCRE2_SPTR)expression, PCRE2_ZERO_TERMINATED, 0, &errornumber, &erroroffset, NULL);
@@ -42,9 +42,10 @@ int ParseExpression(const char *expression, CSV *csv) {
         char ReplaceBuffer[128];
         snprintf(ReplaceBuffer, sizeof(ReplaceBuffer), "$%d", i);
         strcat(csv->replace_str, ReplaceBuffer);
+
         if (i < capture_count) {
-            strcat(csv->CSV_header, ",");
-            strcat(csv->replace_str, ",");
+            strcat(csv->CSV_header, delimiter);
+            strcat(csv->replace_str, delimiter);
         }
     }
     return 0;
@@ -78,12 +79,12 @@ int WriteBuffer(char *line, char **buffer, bool reset) {
 
 int CompileCmd(char *cmd, Options options, char **OutputText) {
     char cmdbuffer[4096];
-    CSV csv = {0};
 
-    strcat(cmd, "rg ");
+    strcat(cmd, "rg --sort=path ");
     if (options.PrintPaths) {
         strcat(cmd, "--files ");
     }
+
     if (options.Multiline) {
         strcat(cmd, "-U ");
     }
@@ -96,13 +97,23 @@ int CompileCmd(char *cmd, Options options, char **OutputText) {
     if (!options.AppendPaths) {
         strcat(cmd, "--no-filename ");
     }
+
     if (options.OmitMatches) {
         strcat(cmd, "--only-matching ");
     }
 
+    if (options.Debug) {
+        strcat(cmd, options.DebugOptions);
+    }
+
+    char delimiter[16] = ",";
+    if (strcmp(options.DelimiterText, "")) strcpy(delimiter, options.DelimiterText);
+
+    CSV csv = {0};
     if (options.Format) {
-        if (ParseExpression(options.RegularExpressionText, &csv)) return 1;
+        if (ParseExpression(options.RegularExpressionText, &csv, delimiter)) return 1;
         if (options.AppendPaths) WriteBuffer("Filename,", OutputText, false);
+
         WriteBuffer(csv.CSV_header, OutputText, false);
         WriteBuffer("\n", OutputText, false);
 #ifdef _WIN32
@@ -125,8 +136,6 @@ int CompileCmd(char *cmd, Options options, char **OutputText) {
 
     // make sure stderr is included in stdout
     strcat(cmd, " 2>&1");
-
-    printf("cmd = %s\n", cmd);
     return 0;
 }
 

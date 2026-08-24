@@ -13,15 +13,18 @@
 #endif //_WIN32
 
 typedef struct {
-    bool PrintPaths;
-    bool AppendPaths;
-    bool OmitMatches;
-    bool Multiline;
-    bool Format;
+    int PrintPaths;
+    int AppendPaths;
+    int OmitMatches;
+    int Multiline;
+    int Format;
+    int Debug;
     char InputPathText[1024];
     char FileText[128];
     char OutputPathText[1024];
     char RegularExpressionText[2048];
+    char DebugOptions[2048];
+    char DelimiterText[16];
 } Options;
 
 typedef struct {
@@ -31,7 +34,7 @@ typedef struct {
 } CSV;
 
 // Function declarations
-int ParseExpression(const char *expression, CSV *csv);
+int ParseExpression(const char *expression, CSV *csv, char *delimiter);
 int WriteBuffer(char *line, char **buffer, bool reset);
 int CompileCmd(char *cmd, Options options, char **OutputText);
 int OpenProcess(FILE **pipe, char *cmd);
