@@ -66,7 +66,7 @@ int WriteBuffer(char *line, char **buffer, bool reset) {
     // Reallocate memory based on size of string
     char *temp = realloc(*buffer, total_size + line_len + 1);
     if (temp == NULL) {
-        perror("pclose failed");
+        perror("realloc failed");
         return 1;
     }
     *buffer = temp;
@@ -159,7 +159,7 @@ int WriteToFile(char *OutputText, char *filename) {
     output = fopen(filename, "w");
 
     if (output == NULL) {
-        perror("Failed to file for output");
+        perror("Failed to open file for output");
         return 1;
     }
 
