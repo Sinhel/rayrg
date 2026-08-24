@@ -22,25 +22,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y build-essential libpcre2-dev \
-            libasound2-dev libx11-dev libxrandr-dev libxi-dev \
-            libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
-            libxfixes-dev libxinerama-dev libwayland-dev \
-            libwayland-cursor0 wayland-protocols \
-            gcc-mingw-w64-x86-64 zstd
-
-      - name: Build and install raylib from source 
-        run: |
-          #linux
-          git clone --depth 1 --branch 6.0 https://github.com/raysan5/raylib.git 
-          cd raylib/src 
-          make PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=STATIC
-          sudo make install
-          #clean between linux and windows
-          make clean
-          #windows
-          make PLATFORM=PLATFORM_DESKTOP_WIN32 CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar RAYLIB_LIBTYPE=STATIC
-          sudo cp *.h /usr/x86_64-w64-mingw32/include/
-          sudo cp libraylib.a /usr/x86_64-w64-mingw32/lib/
+            libsdl2-dev \
+            gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 zstd
 
       - name: Build and install pcre2 from source (static) 
         run: | 
@@ -64,6 +47,24 @@ jobs:
           cmake --build . --config Release
           sudo cmake --install .
 
+      - name: Build and install SDL2 from source for MinGW
+        run: |
+          git clone https://github.com/libsdl-org/SDL.git
+          cd SDL
+          git checkout release-2.30.6
+          mkdir build-mingw && cd build-mingw
+          cmake .. \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+            -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+            -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
+            -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/x86_64-w64-mingw32 \
+            -DBUILD_SHARED_LIBS=OFF
+          cmake --build . --config Release
+          sudo cmake --install .
+
       - name: Build Linux
         run: make linux
 
@@ -73,24 +74,24 @@ jobs:
       - name: Verify static linking 
         run: | 
           echo "=== Linux binary ===" 
-          ldd rayrg 2>&1 || echo "(statically linked — ldd reports no dynamic dependencies)" 
+          ldd build/regexsearcher 2>&1 || echo "(statically linked — ldd reports no dynamic dependencies)" 
           echo "=== Windows binary ===" 
-          x86_64-w64-mingw32-objdump -p rayrg.exe | grep "DLL Name" || echo "(no DLL dependencies found)"
+          x86_64-w64-mingw32-objdump -p build/regexsearcher.exe | grep "DLL Name" || echo "(no DLL dependencies found)"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: |
-            rayrg
-            rayrg.exe
+            build/regexsearcher
+            build/regexsearcher.exe
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            rayrg
-            rayrg.exe
+            build/regexsearcher
+            build/regexsearcher.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
