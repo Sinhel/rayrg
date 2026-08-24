@@ -81,17 +81,19 @@ int CompileCmd(char *cmd, Options options, char **OutputText) {
     char cmdbuffer[4096];
 
     strcat(cmd, "rg --sort=path ");
-    if (options.PrintPaths) {
-        strcat(cmd, "--files ");
-    }
-
-    if (options.Multiline) {
-        strcat(cmd, "-U ");
-    }
 
     if (strcmp(options.FileText, "")) {
         sprintf(cmdbuffer, "-g \"%s\" ", options.FileText);
         strcat(cmd, cmdbuffer);
+    }
+
+    if (options.PrintPaths) {
+        strcat(cmd, "--files ");
+        return 0;
+    }
+
+    if (options.Multiline) {
+        strcat(cmd, "-U ");
     }
 
     if (!options.AppendPaths) {
