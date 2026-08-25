@@ -12,6 +12,9 @@
 #define PCLOSE pclose
 #endif //_WIN32
 
+#define MAX_LINESIZE 2048
+#define DELIMITER 16
+
 typedef struct {
     int PrintPaths;
     int AppendPaths;
@@ -19,12 +22,12 @@ typedef struct {
     int Multiline;
     int Format;
     int Debug;
-    char InputPathText[1024];
-    char FileText[128];
-    char OutputPathText[1024];
-    char RegularExpressionText[2048];
-    char DebugOptions[2048];
-    char DelimiterText[16];
+    char InputPathText[MAX_LINESIZE];
+    char FileText[MAX_LINESIZE];
+    char OutputPathText[MAX_LINESIZE];
+    char RegularExpressionText[MAX_LINESIZE];
+    char DebugOptions[MAX_LINESIZE];
+    char DelimiterText[DELIMITER];
 } Options;
 
 typedef struct {

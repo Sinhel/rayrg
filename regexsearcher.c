@@ -30,12 +30,12 @@ int ParseExpression(const char *expression, CSV *csv) {
             }
         }
 
-        char HeaderBuffer[128] = {0};
+        char HeaderBuffer[MAX_LINESIZE] = {0};
         if (found_name) snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%s", found_name);
         else snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%d", i);
         strcat(csv->CSV_header, HeaderBuffer);
 
-        char ReplaceBuffer[128];
+        char ReplaceBuffer[MAX_LINESIZE];
         snprintf(ReplaceBuffer, sizeof(ReplaceBuffer), "$%d", i);
         strcat(csv->replace_str, ReplaceBuffer);
 
@@ -73,8 +73,8 @@ int WriteBuffer(char *line, char **buffer, bool reset) {
     return 0;
 }
 
-int CompileCmd(char *cmd, Options options, char **OutputText) {
-    char cmdbuffer[4096];
+int CompileCmd(char *cmd, Options options, CSV *csv, char **OutputText) {
+    char cmdbuffer[MAX_LINESIZE];
 
     strcat(cmd, "rg --sort=path ");
 

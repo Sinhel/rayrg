@@ -17,7 +17,6 @@
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
-#define LINESIZE 2048
 
 static nk_bool nk_filter_reject_all(const struct nk_text_edit *box, nk_rune unicode){
     NK_UNUSED(box);
@@ -90,8 +89,9 @@ int main(void) {
     Options options = {0};
     FILE *pipe = {0};
     int reading = 0;
-    char line[LINESIZE] = {0};
-    char cmd[LINESIZE] = {0};
+    char line[MAX_LINESIZE] = {0};
+    char cmd[MAX_LINESIZE] = {0};
+    CSV csv = {0};
     char *OutputText = malloc(1024 * 8);
     strcpy(OutputText, "Output");
 
@@ -110,7 +110,7 @@ int main(void) {
         if (reading) {
             // Do 1000 reads per frame, to not slow down reading too much
             for (int i = 0; i < 1000; i++) {
-                if (fgets(line, LINESIZE, pipe) != NULL) {
+                if (fgets(line, MAX_LINESIZE, pipe) != NULL) {
                     reading = 1;
                 } else {
                     reading = 0;
