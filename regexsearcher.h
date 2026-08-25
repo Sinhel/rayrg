@@ -38,11 +38,12 @@ typedef struct {
 } CSV;
 
 // Function declarations
-int ParseExpression(const char *expression, CSV *csv, char *delimiter);
+int ParseExpression(const char *expression, CSV *csv);
 int WriteBuffer(char *line, char **buffer, bool reset);
-int CompileCmd(char *cmd, Options options, char **OutputText);
+int CompileCmd(char *cmd, Options options, CSV *csv);
 int OpenProcess(FILE **pipe, char *cmd);
 int WriteToFile(char *OutputText, char *filename);
+int WriteFormatHeader(Options options, CSV *csv, char **OutputText);
 
 #endif // REGEXSEARCHER_H
 

@@ -48,11 +48,24 @@ int ParseExpression(const char *expression, CSV *csv) {
     return 0;
 }
 
+int WriteFormatHeader(Options options, CSV *csv, char **OutputText) {
+    // Clear contents of header, otherwise ParseExpression adds to the existing one
+    strcpy(csv->CSV_header, "");
+    if (ParseExpression(options.RegularExpressionText, csv)) return 1;
+
+    WriteBuffer(csv->CSV_header, OutputText, false);
+    WriteBuffer("\n", OutputText, false);
+    return 0;
+}
+
 int WriteBuffer(char *line, char **buffer, bool reset) {
     static size_t total_size = 0;
 
     if (reset) {
-        if (*buffer != NULL) memset(*buffer, 0, total_size);
+        if (*buffer != NULL) {
+            free(*buffer);
+            *buffer = NULL;
+        }
         total_size = 0;
         return 0;
     }
@@ -71,10 +84,11 @@ int WriteBuffer(char *line, char **buffer, bool reset) {
     // Append the line
     memcpy(*buffer + total_size, line, line_len);
     total_size += line_len;
+    (*buffer)[total_size] = '\0'; 
     return 0;
 }
 
-int CompileCmd(char *cmd, Options options, CSV *csv, char **OutputText) {
+int CompileCmd(char *cmd, Options options, CSV *csv) {
     char cmdbuffer[MAX_LINESIZE];
 
     strncat(cmd, "rg --sort=path ", MAX_LINESIZE);
@@ -109,17 +123,13 @@ int CompileCmd(char *cmd, Options options, CSV *csv, char **OutputText) {
     strcpy(csv->delimiter, ",");
     if (strcmp(options.DelimiterText, "")) strcpy(csv->delimiter, options.DelimiterText);
 
-    CSV csv = {0};
     if (options.Format) {
-        if (ParseExpression(options.RegularExpressionText, &csv, delimiter)) return 1;
-        if (options.AppendPaths) WriteBuffer("Filename,", OutputText, false);
-
-        WriteBuffer(csv.CSV_header, OutputText, false);
-        WriteBuffer("\n", OutputText, false);
+        // Get replace_str from parsing regular expression
+        if (ParseExpression(options.RegularExpressionText, csv)) return 1;
 #ifdef _WIN32
-        sprintf(cmdbuffer, "--replace \"%s\" ", csv.replace_str);
+        sprintf(cmdbuffer, "--replace \"%s\" ", csv->replace_str);
 #else
-        sprintf(cmdbuffer, "--replace \'%s\' ", csv.replace_str);
+        sprintf(cmdbuffer, "--replace \'%s\' ", csv->replace_str);
 #endif
         strncat(cmd, cmdbuffer, MAX_LINESIZE);
     }

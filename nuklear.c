@@ -170,7 +170,7 @@ int main(void) {
 
             if (options.Debug) {
                 strcpy(cmd, "");
-                CompileCmd(cmd, options, &OutputText);
+                CompileCmd(cmd, options, &csv);
 
                 nk_layout_row_begin(ctx, NK_DYNAMIC, win_h/18.f, 1);
                 nk_layout_row_push(ctx, 1.0);
@@ -190,9 +190,11 @@ int main(void) {
 
         if (ButtonSearch || nk_input_is_key_pressed(&ctx->input, NK_KEY_ENTER)) {
             ButtonSearch = 0;
+            
             WriteBuffer(NULL, &OutputText, true);
+            if (options.Format) {WriteFormatHeader(options, &csv, &OutputText);}
             strcpy(cmd, "");
-            if (CompileCmd(cmd, options, &OutputText)) {
+            if (CompileCmd(cmd, options, &csv)) {
                 continue;
             }
             if (!OpenProcess(&pipe, cmd)) {
@@ -200,6 +202,8 @@ int main(void) {
             }
         }
     }
+
+    free(OutputText);
 
     nk_sdl_shutdown();
     SDL_DestroyRenderer(renderer);
