@@ -1,4 +1,5 @@
 #include "regexsearcher.h"
+#include <string.h>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
@@ -33,11 +34,11 @@ int ParseExpression(const char *expression, CSV *csv) {
         char HeaderBuffer[MAX_LINESIZE] = {0};
         if (found_name) snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%s", found_name);
         else snprintf(HeaderBuffer, sizeof(HeaderBuffer), "%d", i);
-        strcat(csv->CSV_header, HeaderBuffer);
+        strncat(csv->CSV_header, HeaderBuffer, MAX_LINESIZE);
 
         char ReplaceBuffer[MAX_LINESIZE];
         snprintf(ReplaceBuffer, sizeof(ReplaceBuffer), "$%d", i);
-        strcat(csv->replace_str, ReplaceBuffer);
+        strncat(csv->replace_str, ReplaceBuffer, MAX_LINESIZE);
 
         if (i < capture_count) {
             strncat(csv->CSV_header, csv->delimiter, MAX_LINESIZE);
@@ -76,36 +77,37 @@ int WriteBuffer(char *line, char **buffer, bool reset) {
 int CompileCmd(char *cmd, Options options, CSV *csv, char **OutputText) {
     char cmdbuffer[MAX_LINESIZE];
 
-    strcat(cmd, "rg --sort=path ");
+    strncat(cmd, "rg --sort=path ", MAX_LINESIZE);
 
     if (strcmp(options.FileText, "")) {
         sprintf(cmdbuffer, "-g \"%s\" ", options.FileText);
-        strcat(cmd, cmdbuffer);
+        strncat(cmd, cmdbuffer, MAX_LINESIZE);
     }
 
     if (options.PrintPaths) {
-        strcat(cmd, "--files ");
+        strncat(cmd, "--files ", MAX_LINESIZE);
         return 0;
     }
 
     if (options.Multiline) {
-        strcat(cmd, "-U ");
+        strncat(cmd, "-U ", MAX_LINESIZE);
     }
 
     if (!options.AppendPaths) {
-        strcat(cmd, "--no-filename ");
+        strncat(cmd, "--no-filename ", MAX_LINESIZE);
     }
 
     if (options.OmitMatches) {
-        strcat(cmd, "--only-matching ");
+        strncat(cmd, "--only-matching ", MAX_LINESIZE);
     }
 
     if (options.Debug) {
-        strcat(cmd, options.DebugOptions);
+        strncat(cmd, options.DebugOptions, MAX_LINESIZE);
     }
 
-    char delimiter[16] = ",";
-    if (strcmp(options.DelimiterText, "")) strcpy(delimiter, options.DelimiterText);
+    memset(csv, 0, sizeof(CSV));
+    strcpy(csv->delimiter, ",");
+    if (strcmp(options.DelimiterText, "")) strcpy(csv->delimiter, options.DelimiterText);
 
     CSV csv = {0};
     if (options.Format) {
@@ -119,21 +121,21 @@ int CompileCmd(char *cmd, Options options, CSV *csv, char **OutputText) {
 #else
         sprintf(cmdbuffer, "--replace \'%s\' ", csv.replace_str);
 #endif
-        strcat(cmd, cmdbuffer);
+        strncat(cmd, cmdbuffer, MAX_LINESIZE);
     }
 
     if (strcmp(options.RegularExpressionText, "")) {
         sprintf(cmdbuffer, "\"%s\" ", options.RegularExpressionText);
-        strcat(cmd, cmdbuffer);
+        strncat(cmd, cmdbuffer, MAX_LINESIZE);
     }
 
     if (strcmp(options.InputPathText, "")) {
         sprintf(cmdbuffer, "%s ", options.InputPathText);
-        strcat(cmd, options.InputPathText);
+        strncat(cmd, options.InputPathText, MAX_LINESIZE);
     }
 
     // make sure stderr is included in stdout
-    strcat(cmd, " 2>&1");
+    strncat(cmd, " 2>&1", MAX_LINESIZE);
     return 0;
 }
 
