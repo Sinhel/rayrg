@@ -29,8 +29,9 @@ typedef struct {
 
 typedef struct {
     int error;
-    char replace_str[1024];
-    char CSV_header[1024];
+    char replace_str[MAX_LINESIZE];
+    char CSV_header[MAX_LINESIZE];
+    char delimiter[DELIMITER];
 } CSV;
 
 // Function declarations

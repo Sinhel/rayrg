@@ -3,11 +3,7 @@
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
-#include <string.h>
-
-#define LINESIZE 2048
-
-int ParseExpression(const char *expression, CSV *csv, char *delimiter) {
+int ParseExpression(const char *expression, CSV *csv) {
     int errornumber;
     PCRE2_SIZE erroroffset;
     pcre2_code *re = pcre2_compile((PCRE2_SPTR)expression, PCRE2_ZERO_TERMINATED, 0, &errornumber, &erroroffset, NULL);
@@ -44,8 +40,8 @@ int ParseExpression(const char *expression, CSV *csv, char *delimiter) {
         strcat(csv->replace_str, ReplaceBuffer);
 
         if (i < capture_count) {
-            strcat(csv->CSV_header, delimiter);
-            strcat(csv->replace_str, delimiter);
+            strncat(csv->CSV_header, csv->delimiter, MAX_LINESIZE);
+            strncat(csv->replace_str, csv->delimiter, MAX_LINESIZE);
         }
     }
     return 0;
