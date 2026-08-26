@@ -118,10 +118,6 @@ int main(void) {
                     if (status == -1) {
                         return 1;
                     }
-                    // cleanup and leave loop
-                    if (strcmp(options.OutputPathText, "")) {
-                        WriteToFile(OutputText, options.OutputPathText);
-                    }
                     break;
                 }
                 if (WriteBuffer(line, &OutputText, false)) {
@@ -129,9 +125,16 @@ int main(void) {
             }
         }
 
-        //Get window size in case it's been resized
+        // Get window size in case it's been resized
         static int win_w, win_h;
         SDL_GetWindowSize(win, &win_w, &win_h);
+        
+        // Store filepath for saving file in a string
+        char filepath[128] = {0};
+        strcpy(filepath, "output.txt");
+        if (strcmp(options.OutputPathText, "")) {
+            strcpy(filepath, options.OutputPathText);
+        }
 
         if (nk_begin(ctx, "Regex Searcher", nk_rect(0, 0, win_w, win_h), NK_WINDOW_NO_SCROLLBAR)) {
             nk_layout_row_begin(ctx, NK_DYNAMIC, win_h/3.f, 2);
@@ -144,7 +147,8 @@ int main(void) {
                 nk_edit_string_zero_terminated_placeholder(ctx, options.OutputPathText, sizeof(options.OutputPathText), "Output Path");
                 nk_edit_string_zero_terminated_placeholder(ctx, options.RegularExpressionText,sizeof(options.RegularExpressionText), "Regular Expression");
                 nk_edit_string_zero_terminated_placeholder(ctx, options.DelimiterText, sizeof(options.DelimiterText), "Delimeter");
-                if (nk_button_label(ctx, "Search")) {ButtonSearch = true;};
+                if (nk_button_label(ctx, "Search")) {ButtonSearch = true;}
+                if (nk_button_label(ctx, "Save to file")) { FILE *f = fopen(filepath, "w"); if (f){ fputs(OutputText, f); fclose(f); }}
                 nk_group_end(ctx);
             } 
             nk_layout_row_push(ctx, 1.0/3.0);
@@ -205,10 +209,12 @@ int main(void) {
             
             WriteBuffer(NULL, &OutputText, true);
             if (options.Format) {WriteFormatHeader(options, &csv, &OutputText);}
+            
             strcpy(cmd, "");
             if (CompileCmd(cmd, options, &csv)) {
                 continue;
             }
+
             if (!OpenProcess(&pipe, cmd)) {
                 reading = 1;
             }

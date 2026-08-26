@@ -162,21 +162,3 @@ int OpenProcess(FILE **pipe, char *cmd) {
     return 0;
 }
 
-int WriteToFile(char *OutputText, char *filename) {
-
-    FILE *output;
-    if (filename == NULL) {
-        filename = "output.txt";
-    }
-    output = fopen(filename, "w");
-
-    if (output == NULL) {
-        perror("Failed to open file for output");
-        return 1;
-    }
-
-    fputs(OutputText, output);
-    fclose(output);
-    printf("Data written to %s\n", filename);
-    return 0;
-}
