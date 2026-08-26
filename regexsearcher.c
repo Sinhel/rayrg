@@ -107,6 +107,10 @@ int CompileCmd(char *cmd, Options options, CSV *csv) {
         strncat(cmd, "-U ", MAX_LINESIZE);
     }
 
+    if (options.LineNumbers) {
+        strncat(cmd, "--line-number ", MAX_LINESIZE);
+    }
+
     if (!options.AppendPaths) {
         strncat(cmd, "--no-filename ", MAX_LINESIZE);
     }

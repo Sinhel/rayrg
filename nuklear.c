@@ -152,6 +152,7 @@ int main(void) {
                 nk_layout_row_dynamic(ctx, 30, 1);
                 nk_checkbox_label(ctx, "Print paths",   &options.PrintPaths);
                 nk_checkbox_label(ctx, "Append paths",  &options.AppendPaths);
+                nk_checkbox_label(ctx, "Line numbers",  &options.LineNumbers);
                 nk_checkbox_label(ctx, "Omit Matches",  &options.OmitMatches);
                 nk_checkbox_label(ctx, "Multiline",     &options.Multiline);
                 nk_checkbox_label(ctx, "Format",        &options.Format);

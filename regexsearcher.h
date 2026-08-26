@@ -18,6 +18,7 @@
 typedef struct {
     int PrintPaths;
     int AppendPaths;
+    int LineNumbers;
     int OmitMatches;
     int Multiline;
     int Format;
