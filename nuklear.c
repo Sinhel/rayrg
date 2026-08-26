@@ -161,7 +161,18 @@ int main(void) {
             nk_layout_row_end(ctx);
 
             float output_height = win_h/3.f*2;
-            if (options.Debug) output_height = win_h/9.f*5;
+
+            float line_height = ctx->style.font->height
+                              + 2*ctx->style.window.padding.y
+                              + ctx->style.window.spacing.y;
+
+            float row_height = ctx->style.font->height
+                              + 2*ctx->style.window.spacing.y
+                              + 2*ctx->style.window.padding.y
+                              + 2*ctx->style.window.group_padding.y;
+            
+            float debug_rows = 2;
+            if (options.Debug) output_height = output_height - (debug_rows*row_height);
 
             nk_layout_row_begin(ctx, NK_DYNAMIC, output_height, 1);
             nk_layout_row_push(ctx, 1.0);
@@ -172,12 +183,12 @@ int main(void) {
                 strcpy(cmd, "");
                 CompileCmd(cmd, options, &csv);
 
-                nk_layout_row_begin(ctx, NK_DYNAMIC, win_h/18.f, 1);
+                nk_layout_row_begin(ctx, NK_DYNAMIC, line_height, 1);
                 nk_layout_row_push(ctx, 1.0);
                 nk_edit_string_zero_terminated_placeholder(ctx, options.DebugOptions ,sizeof(options.DebugOptions), "Debug options");
                 nk_layout_row_end(ctx);
 
-                nk_layout_row_begin(ctx, NK_DYNAMIC, win_h/18.f, 1);
+                nk_layout_row_begin(ctx, NK_DYNAMIC, line_height, 1);
                 nk_layout_row_push(ctx, 1.0);
                 nk_edit_string_zero_terminated_placeholder(ctx, cmd, sizeof(cmd), "Cmd");
                 nk_layout_row_end(ctx);
