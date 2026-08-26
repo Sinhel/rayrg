@@ -145,7 +145,7 @@ int CompileCmd(char *cmd, Options options, CSV *csv) {
 
     if (strcmp(options.InputPathText, "")) {
         sprintf(cmdbuffer, "%s ", options.InputPathText);
-        strncat(cmd, options.InputPathText, MAX_LINESIZE);
+        strncat(cmd, cmdbuffer, MAX_LINESIZE);
     }
 
     // make sure stderr is included in stdout
