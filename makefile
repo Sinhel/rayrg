@@ -24,7 +24,7 @@ LDFLAGS_WIN = -static -static-libgcc \
               -lmingw32 -lSDL2main -lSDL2 \
               -Wl,-Bstatic -lpcre2-8 \
               -Wl,-Bdynamic -lwinmm -limm32 -lsetupapi -lversion -lole32 \
-              -loleaut32 -luuid -lgdi32 -luser32 -lkernel32
+              -loleaut32 -luuid -lgdi32 -luser32 -lkernel32 -mwindows
 
 # Source files
 SRC = nuklear.c regexsearcher.c
