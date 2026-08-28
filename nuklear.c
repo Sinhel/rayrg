@@ -15,8 +15,8 @@
 #include "nuklear_sdl_renderer.h"
 #include "regexsearcher.h"
 
-#define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 800
+#define WINDOW_WIDTH 600
+#define WINDOW_HEIGHT 500
 
 static nk_bool nk_filter_reject_all(const struct nk_text_edit *box, nk_rune unicode){
     NK_UNUSED(box);
@@ -54,7 +54,7 @@ int main(void) {
         SDL_Log("Error SDL_CreateWindow: %s", SDL_GetError());
         return -1;
     }
-    SDL_SetWindowMinimumSize(win, 300, 300);
+    SDL_SetWindowMinimumSize(win, 600, 500);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!renderer) {
@@ -135,9 +135,9 @@ int main(void) {
         if (strcmp(options.OutputPathText, "")) {
             strcpy(filepath, options.OutputPathText);
         }
-
+        int inputArea = 300;
         if (nk_begin(ctx, "Regex Searcher", nk_rect(0, 0, win_w, win_h), NK_WINDOW_NO_SCROLLBAR)) {
-            nk_layout_row_begin(ctx, NK_DYNAMIC, win_h/3.f, 2);
+            nk_layout_row_begin(ctx, NK_DYNAMIC, inputArea, 2);
 
             nk_layout_row_push(ctx, 2.f/3.f);
             if (nk_group_begin(ctx, "Text fields", NK_WINDOW_TITLE | NK_WINDOW_BORDER)) {
@@ -165,7 +165,7 @@ int main(void) {
             }
             nk_layout_row_end(ctx);
 
-            float output_height = win_h/3.f*2;
+            float output_height = win_h-inputArea;
 
             float line_height = ctx->style.font->height
                               + 2*ctx->style.window.padding.y
